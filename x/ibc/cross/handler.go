@@ -44,11 +44,11 @@ func NewPacketReceiver(keeper Keeper, contractHandler ContractHandler) PacketRec
 
 /*
 Steps:
-- Ensure that all channels in ContractTransactions are correct
+- Ensure that all channels in CrossChainTransactions are correct
 - Multicast a Prepare packet to each participants
 */
 func handleMsgInitiate(ctx sdk.Context, k Keeper, msg MsgInitiate) (*sdk.Result, error) {
-	txID, err := k.MulticastPreparePacket(ctx, msg.Sender, msg, msg.ContractTransactions)
+	txID, err := k.MulticastPreparePacket(ctx, msg.Sender, msg, msg.CrossChainTransactions)
 	if err != nil {
 		return nil, sdkerrors.Wrap(types.ErrFailedInitiateTx, err.Error())
 	}

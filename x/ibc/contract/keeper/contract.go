@@ -53,12 +53,12 @@ func NewContractHandler(k Keeper, stateProvider StateProvider) *contractHandler 
 	return &contractHandler{keeper: k, routes: make(map[string]Contract), stateProvider: stateProvider}
 }
 
-func (h *contractHandler) Handle(ctx sdk.Context, contract []byte) (state cross.State, res cross.ContractHandlerResult, err error) {
-	info, err := types.DecodeContractSignature(contract)
+func (h *contractHandler) Handle(ctx sdk.Context, tp cross.StateConditionType, callInfo cross.ContractCallInfo) (state cross.State, res cross.ContractHandlerResult, err error) {
+	info, err := types.DecodeContractSignature(callInfo)
 	if err != nil {
 		return nil, nil, err
 	}
-	st, err := h.GetState(ctx, contract)
+	st, err := h.GetState(ctx, callInfo)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -88,8 +88,8 @@ func (h *contractHandler) Handle(ctx sdk.Context, contract []byte) (state cross.
 	return st, types.NewContractHandlerResult(v, c.EventManager().Events()), nil
 }
 
-func (h *contractHandler) GetState(ctx sdk.Context, contract []byte) (cross.State, error) {
-	info, err := types.DecodeContractSignature(contract)
+func (h *contractHandler) GetState(ctx sdk.Context, callInfo cross.ContractCallInfo) (cross.State, error) {
+	info, err := types.DecodeContractSignature(callInfo)
 	if err != nil {
 		return nil, err
 	}

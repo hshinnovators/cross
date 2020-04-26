@@ -31,6 +31,11 @@ const (
 	TypePrepare       = types.TypePrepare
 	TypePrepareResult = types.TypePrepareResult
 	TypeCommit        = types.TypeCommit
+
+	NoStateCondition    = types.NoStateCondition
+	ExactStateCondition = types.ExactStateCondition
+	PreStateCondition   = types.PreStateCondition
+	PostStateCondition  = types.PostStateCondition
 )
 
 // nolint
@@ -44,7 +49,8 @@ var (
 	SignersFromContext         = types.SignersFromContext
 	WithSigners                = types.WithSigners
 	NewMsgInitiate             = types.NewMsgInitiate
-	NewContractTransaction     = types.NewContractTransaction
+	NewCrossChainTransaction   = types.NewCrossChainTransaction
+	NewStateCondition          = types.NewStateCondition
 	NewChannelInfo             = types.NewChannelInfo
 	NewPacketDataPrepare       = types.NewPacketDataPrepare
 	NewPacketDataPrepareResult = types.NewPacketDataPrepareResult
@@ -69,8 +75,11 @@ type (
 	Store                   = types.Store
 	Committer               = types.Committer
 	ChannelInfo             = types.ChannelInfo
-	ContractTransaction     = types.ContractTransaction
-	ContractTransactions    = types.ContractTransactions
+	CrossChainTransaction   = types.CrossChainTransaction
+	CrossChainTransactions  = types.CrossChainTransactions
+	StateCondition          = types.StateCondition
+	StateConditionType      = types.StateConditionType
+	ContractCallInfo        = types.ContractCallInfo
 	ContractCallResult      = types.ContractCallResult
 	TxID                    = types.TxID
 	TxIndex                 = types.TxIndex

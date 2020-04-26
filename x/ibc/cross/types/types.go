@@ -28,8 +28,8 @@ type (
 )
 
 type ContractHandler interface {
-	GetState(ctx sdk.Context, contract []byte) (State, error)
-	Handle(ctx sdk.Context, contract []byte) (State, ContractHandlerResult, error)
+	GetState(ctx sdk.Context, callInfo ContractCallInfo) (State, error)
+	Handle(ctx sdk.Context, tp StateConditionType, callInfo ContractCallInfo) (State, ContractHandlerResult, error)
 	OnCommit(ctx sdk.Context, result ContractHandlerResult) ContractHandlerResult
 }
 
@@ -109,19 +109,19 @@ const (
 type TxInfo struct {
 	Status                  uint8
 	CoordinatorConnectionID string
-	Contract                []byte
+	ContractCallInfo        ContractCallInfo
 }
 
-func NewTxInfo(status uint8, coordinatorConnectionID string, contract []byte) TxInfo {
-	return TxInfo{Status: status, CoordinatorConnectionID: coordinatorConnectionID, Contract: contract}
+func NewTxInfo(status uint8, coordinatorConnectionID string, callInfo ContractCallInfo) TxInfo {
+	return TxInfo{Status: status, CoordinatorConnectionID: coordinatorConnectionID, ContractCallInfo: callInfo}
 }
 
 type ContractCallResult struct {
-	ChainID  string           `json:"chain_id" yaml:"chain_id"`
-	Height   int64            `json:"height" yaml:"height"`
-	Signers  []sdk.AccAddress `json:"signers" yaml:"signers"`
-	Contract []byte           `json:"contract" yaml:"contract"`
-	OPs      []OP             `json:"ops" yaml:"ops"`
+	ChainID        string           `json:"chain_id" yaml:"chain_id"`
+	Height         int64            `json:"height" yaml:"height"`
+	Signers        []sdk.AccAddress `json:"signers" yaml:"signers"`
+	CallInfo       ContractCallInfo `json:"call_info" yaml:"call_info"`
+	StateCondition StateCondition   `json:"state_condition" yaml:"state_condition"`
 }
 
 func (r ContractCallResult) String() string {

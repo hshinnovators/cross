@@ -22,18 +22,18 @@ type PacketData interface {
 var _ PacketData = (*PacketDataPrepare)(nil)
 
 type PacketDataPrepare struct {
-	Sender              sdk.AccAddress
-	TxID                TxID
-	TxIndex             TxIndex
-	ContractTransaction ContractTransaction
+	Sender                sdk.AccAddress
+	TxID                  TxID
+	TxIndex               TxIndex
+	CrossChainTransaction CrossChainTransaction
 }
 
-func NewPacketDataPrepare(sender sdk.AccAddress, txID TxID, txIndex TxIndex, transaction ContractTransaction) PacketDataPrepare {
-	return PacketDataPrepare{Sender: sender, TxID: txID, TxIndex: txIndex, ContractTransaction: transaction}
+func NewPacketDataPrepare(sender sdk.AccAddress, txID TxID, txIndex TxIndex, transaction CrossChainTransaction) PacketDataPrepare {
+	return PacketDataPrepare{Sender: sender, TxID: txID, TxIndex: txIndex, CrossChainTransaction: transaction}
 }
 
 func (p PacketDataPrepare) ValidateBasic() error {
-	if err := p.ContractTransaction.ValidateBasic(); err != nil {
+	if err := p.CrossChainTransaction.ValidateBasic(); err != nil {
 		return err
 	}
 	return nil

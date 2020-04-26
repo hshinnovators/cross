@@ -1,20 +1,25 @@
 package types
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/datachainlab/cross/x/ibc/cross"
+)
 
 var _ sdk.Msg = (*MsgContractCall)(nil)
 
 type MsgContractCall struct {
-	Sender   sdk.AccAddress
-	Signers  []sdk.AccAddress `json:"signers" yaml:"signers"`
-	Contract []byte           `json:"contract" yaml:"contract"`
+	Sender         sdk.AccAddress
+	Signers        []sdk.AccAddress       `json:"signers" yaml:"signers"`
+	CallInfo       cross.ContractCallInfo `json:"call_info" yaml:"call_info"`
+	StateCondition cross.StateCondition   `json:"state_condition" yaml:"state_condition"`
 }
 
-func NewMsgContractCall(sender sdk.AccAddress, signers []sdk.AccAddress, contract []byte) MsgContractCall {
+func NewMsgContractCall(sender sdk.AccAddress, signers []sdk.AccAddress, callInfo cross.ContractCallInfo, cond cross.StateCondition) MsgContractCall {
 	return MsgContractCall{
-		Sender:   sender,
-		Signers:  signers,
-		Contract: contract,
+		Sender:         sender,
+		Signers:        signers,
+		CallInfo:       callInfo,
+		StateCondition: cond,
 	}
 }
 

@@ -198,18 +198,24 @@ func (suite *KeeperTestSuite) TestInitiateMsg() {
 	ch2to0 := cross.NewChannelInfo("testporttwozero", "testchanneltwozero") // app2 -> app0
 
 	var nonce uint64 = 1
-	var tss = []cross.ContractTransaction{
-		cross.NewContractTransaction(
+	var tss = []cross.CrossChainTransaction{
+		cross.NewCrossChainTransaction(
 			ch0to1,
 			[]sdk.AccAddress{signer1},
 			ci1.Bytes(),
-			[]cross.OP{lock.Write{K: signer1, V: marshalCoin(sdk.Coins{sdk.NewInt64Coin("tone", 80)})}},
+			cross.NewStateCondition(
+				cross.ExactStateCondition,
+				[]cross.OP{lock.Write{K: signer1, V: marshalCoin(sdk.Coins{sdk.NewInt64Coin("tone", 80)})}},
+			),
 		),
-		cross.NewContractTransaction(
+		cross.NewCrossChainTransaction(
 			ch0to2,
 			[]sdk.AccAddress{signer2},
 			ci2.Bytes(),
-			[]cross.OP{lock.Write{K: signer2, V: marshalCoin(sdk.Coins{sdk.NewInt64Coin("ttwo", 60)})}},
+			cross.NewStateCondition(
+				cross.ExactStateCondition,
+				[]cross.OP{lock.Write{K: signer2, V: marshalCoin(sdk.Coins{sdk.NewInt64Coin("ttwo", 60)})}},
+			),
 		),
 	}
 
@@ -225,7 +231,7 @@ func (suite *KeeperTestSuite) TestInitiateMsg() {
 			app0.ctx,
 			initiator,
 			msg,
-			msg.ContractTransactions,
+			msg.CrossChainTransactions,
 		)
 		suite.Error(err) // channel does not exist
 	}
@@ -271,7 +277,7 @@ func (suite *KeeperTestSuite) TestInitiateMsg() {
 			app0.ctx,
 			initiator,
 			msg,
-			msg.ContractTransactions,
+			msg.CrossChainTransactions,
 		)
 		suite.Error(err) // timeout error
 	}
@@ -288,7 +294,7 @@ func (suite *KeeperTestSuite) TestInitiateMsg() {
 			app0.ctx,
 			initiator,
 			msg,
-			msg.ContractTransactions,
+			msg.CrossChainTransactions,
 		)
 		suite.Error(err) // occur an error due to invalid chainID
 	}
@@ -305,7 +311,7 @@ func (suite *KeeperTestSuite) TestInitiateMsg() {
 			app0.ctx,
 			initiator,
 			msg,
-			msg.ContractTransactions,
+			msg.CrossChainTransactions,
 		)
 		suite.NoError(err) // successfully executed
 	}
@@ -336,24 +342,33 @@ func (suite *KeeperTestSuite) TestAtomicCommitFlow() {
 
 	var err error
 	var nonce uint64 = 1
-	var tss = []cross.ContractTransaction{
-		cross.NewContractTransaction(
+	var tss = []cross.CrossChainTransaction{
+		cross.NewCrossChainTransaction(
 			ch0to1,
 			[]sdk.AccAddress{signer1},
 			ci1.Bytes(),
-			[]cross.OP{lock.Write{K: signer1, V: marshalCoin(sdk.Coins{sdk.NewInt64Coin("tone", 80)})}},
+			cross.NewStateCondition(
+				cross.ExactStateCondition,
+				[]cross.OP{lock.Write{K: signer1, V: marshalCoin(sdk.Coins{sdk.NewInt64Coin("tone", 80)})}},
+			),
 		),
-		cross.NewContractTransaction(
+		cross.NewCrossChainTransaction(
 			ch0to2,
 			[]sdk.AccAddress{signer2},
 			ci2.Bytes(),
-			[]cross.OP{lock.Write{K: signer2, V: marshalCoin(sdk.Coins{sdk.NewInt64Coin("ttwo", 60)})}},
+			cross.NewStateCondition(
+				cross.ExactStateCondition,
+				[]cross.OP{lock.Write{K: signer2, V: marshalCoin(sdk.Coins{sdk.NewInt64Coin("ttwo", 60)})}},
+			),
 		),
-		cross.NewContractTransaction(
+		cross.NewCrossChainTransaction(
 			ch0to2,
 			[]sdk.AccAddress{signer3},
 			ci3.Bytes(),
-			[]cross.OP{lock.Write{K: signer3, V: marshalCoin(sdk.Coins{sdk.NewInt64Coin("tthree", 40)})}},
+			cross.NewStateCondition(
+				cross.ExactStateCondition,
+				[]cross.OP{lock.Write{K: signer3, V: marshalCoin(sdk.Coins{sdk.NewInt64Coin("tthree", 40)})}},
+			),
 		),
 	}
 
@@ -368,7 +383,7 @@ func (suite *KeeperTestSuite) TestAtomicCommitFlow() {
 		app0.ctx,
 		initiator,
 		msg,
-		msg.ContractTransactions,
+		msg.CrossChainTransactions,
 	)
 	suite.Error(err) // channel does not exist
 
@@ -402,7 +417,7 @@ func (suite *KeeperTestSuite) TestAtomicCommitFlow() {
 		app0.ctx,
 		initiator,
 		msg,
-		msg.ContractTransactions,
+		msg.CrossChainTransactions,
 	)
 	suite.NoError(err) // successfully executed
 
@@ -647,11 +662,11 @@ func (suite *KeeperTestSuite) testCommitPacket(actx *appContext, contractHandler
 	}
 	suite.Equal(cross.TX_STATUS_COMMIT, tx.Status)
 	// ensure that the state is expected
-	_, err = contractHandler.GetState(actx.ctx, tx.Contract)
+	_, err = contractHandler.GetState(actx.ctx, tx.ContractCallInfo)
 	if !suite.NoError(err) {
 		return
 	}
-	ci, err := contract.DecodeContractSignature(tx.Contract)
+	ci, err := contract.DecodeContractSignature(tx.ContractCallInfo)
 	if !suite.NoError(err) {
 		return
 	}
@@ -664,7 +679,7 @@ func (suite *KeeperTestSuite) testCommitPacket(actx *appContext, contractHandler
 		return
 	}
 	ctx := cross.WithSigners(actx.ctx, []sdk.AccAddress{txSigner})
-	_, _, err = contractHandler.Handle(ctx, bz)
+	_, _, err = contractHandler.Handle(ctx, cross.ExactStateCondition, bz)
 	suite.NoError(err)
 }
 
@@ -679,7 +694,7 @@ func (suite *KeeperTestSuite) testAbortPacket(actx *appContext, contractHandler 
 	}
 	suite.Equal(cross.TX_STATUS_ABORT, tx.Status)
 
-	ci, err := contract.DecodeContractSignature(tx.Contract)
+	ci, err := contract.DecodeContractSignature(tx.ContractCallInfo)
 	if !suite.NoError(err) {
 		return
 	}
@@ -689,7 +704,7 @@ func (suite *KeeperTestSuite) testAbortPacket(actx *appContext, contractHandler 
 		return
 	}
 	ctx := cross.WithSigners(actx.ctx, []sdk.AccAddress{txSigner})
-	_, _, err = contractHandler.Handle(ctx, bz)
+	_, _, err = contractHandler.Handle(ctx, cross.ExactStateCondition, bz)
 	suite.NoError(err)
 }
 
@@ -706,7 +721,7 @@ func (suite *KeeperTestSuite) testConfirmPrepareResult(actx *appContext, data cr
 	}
 }
 
-func (suite *KeeperTestSuite) testPreparePacket(actx *appContext, src, dst cross.ChannelInfo, txID types.TxID, txIndex types.TxIndex, contractHandler cross.ContractHandler, ts cross.ContractTransaction, nextseq uint64) {
+func (suite *KeeperTestSuite) testPreparePacket(actx *appContext, src, dst cross.ChannelInfo, txID types.TxID, txIndex types.TxIndex, contractHandler cross.ContractHandler, ts cross.CrossChainTransaction, nextseq uint64) {
 	var err error
 
 	relayer := sdk.AccAddress("relayer1")

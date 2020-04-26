@@ -10,15 +10,15 @@ import (
 var _ sdk.Msg = (*MsgInitiate)(nil)
 
 type MsgInitiate struct {
-	Sender               sdk.AccAddress
-	ChainID              string                // chainID of Coordinator node
-	ContractTransactions []ContractTransaction // TODO: sorted by Source?
-	TimeoutHeight        int64                 // Timeout for this msg
-	Nonce                uint64
+	Sender                 sdk.AccAddress
+	ChainID                string // chainID of Coordinator node
+	CrossChainTransactions []CrossChainTransaction
+	TimeoutHeight          int64 // Timeout for this msg
+	Nonce                  uint64
 }
 
-func NewMsgInitiate(sender sdk.AccAddress, chainID string, transactions []ContractTransaction, timeoutHeight int64, nonce uint64) MsgInitiate {
-	return MsgInitiate{Sender: sender, ChainID: chainID, ContractTransactions: transactions, TimeoutHeight: timeoutHeight, Nonce: nonce}
+func NewMsgInitiate(sender sdk.AccAddress, chainID string, transactions []CrossChainTransaction, timeoutHeight int64, nonce uint64) MsgInitiate {
+	return MsgInitiate{Sender: sender, ChainID: chainID, CrossChainTransactions: transactions, TimeoutHeight: timeoutHeight, Nonce: nonce}
 }
 
 // Route implements sdk.Msg
@@ -33,12 +33,12 @@ func (MsgInitiate) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgInitiate) ValidateBasic() error {
-	if l := len(msg.ContractTransactions); l == 0 {
+	if l := len(msg.CrossChainTransactions); l == 0 {
 		return errors.New("this msg includes no transisions")
 	} else if l > MaxContractTransactoinNum {
-		return fmt.Errorf("The number of ContractTransactions exceeds limit: %v > %v", l, MaxContractTransactoinNum)
+		return fmt.Errorf("The number of CrossChainTransactions exceeds limit: %v > %v", l, MaxContractTransactoinNum)
 	}
-	for _, st := range msg.ContractTransactions {
+	for _, st := range msg.CrossChainTransactions {
 		if err := st.ValidateBasic(); err != nil {
 			return err
 		}
@@ -58,7 +58,7 @@ func (msg MsgInitiate) GetSignBytes() []byte {
 func (msg MsgInitiate) GetSigners() []sdk.AccAddress {
 	seen := map[string]bool{}
 	signers := []sdk.AccAddress{msg.Sender}
-	for _, t := range msg.ContractTransactions {
+	for _, t := range msg.CrossChainTransactions {
 		for _, addr := range t.Signers {
 			if !seen[addr.String()] {
 				signers = append(signers, addr)
@@ -85,26 +85,45 @@ func (c ChannelInfo) ValidateBasic() error {
 	return nil
 }
 
-type ContractTransaction struct {
-	Source ChannelInfo `json:"source" yaml:"source"`
+type ContractCallInfo []byte
 
-	Signers  []sdk.AccAddress `json:"signers" yaml:"signers"`
-	Contract []byte           `json:"contract" yaml:"contract"`
-	OPs      OPs              `json:"ops" yaml:"ops"`
+type CrossChainTransaction struct {
+	Source         ChannelInfo      `json:"source" yaml:"source"`
+	Signers        []sdk.AccAddress `json:"signers" yaml:"signers"`
+	CallInfo       ContractCallInfo `json:"call_info" yaml:"call_info"`
+	StateCondition StateCondition   `json:"state_condition" yaml:"state_condition"`
 }
 
-type ContractTransactions = []ContractTransaction
+type StateConditionType = uint8
 
-func NewContractTransaction(src ChannelInfo, signers []sdk.AccAddress, contract []byte, ops []OP) ContractTransaction {
-	return ContractTransaction{
-		Source:   src,
-		Signers:  signers,
-		Contract: contract,
-		OPs:      ops,
+const (
+	NoStateCondition StateConditionType = iota
+	ExactStateCondition
+	PreStateCondition
+	PostStateCondition
+)
+
+type StateCondition struct {
+	Type StateConditionType `json:"type" yaml:"type"`
+	OPs  OPs                `json:"ops" yaml:"ops"`
+}
+
+func NewStateCondition(tp StateConditionType, ops OPs) StateCondition {
+	return StateCondition{Type: tp, OPs: ops}
+}
+
+type CrossChainTransactions = []CrossChainTransaction
+
+func NewCrossChainTransaction(src ChannelInfo, signers []sdk.AccAddress, callInfo ContractCallInfo, cond StateCondition) CrossChainTransaction {
+	return CrossChainTransaction{
+		Source:         src,
+		Signers:        signers,
+		CallInfo:       callInfo,
+		StateCondition: cond,
 	}
 }
 
-func (t ContractTransaction) ValidateBasic() error {
+func (t CrossChainTransaction) ValidateBasic() error {
 	if err := t.Source.ValidateBasic(); err != nil {
 		return err
 	}

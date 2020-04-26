@@ -16,7 +16,7 @@ func (k Keeper) MulticastPreparePacket(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
 	msg types.MsgInitiate,
-	transactions []types.ContractTransaction,
+	transactions []types.CrossChainTransaction,
 ) (types.TxID, error) {
 	if ctx.ChainID() != msg.ChainID {
 		return types.TxID{}, fmt.Errorf("unexpected chainID: '%v' != '%v'", ctx.ChainID(), msg.ChainID)
@@ -69,7 +69,7 @@ func (k Keeper) CreatePreparePacket(
 	destinationChannel string,
 	txID types.TxID,
 	txIndex types.TxIndex,
-	transaction types.ContractTransaction,
+	transaction types.CrossChainTransaction,
 	sender sdk.AccAddress,
 ) channel.Packet {
 	packetData := types.NewPacketDataPrepare(sender, txID, txIndex, transaction)
@@ -124,7 +124,7 @@ func (k Keeper) PrepareTransaction(
 	hops := c.GetConnectionHops()
 	connID := hops[len(hops)-1]
 
-	txinfo := types.NewTxInfo(types.TX_STATUS_PREPARE, connID, data.ContractTransaction.Contract)
+	txinfo := types.NewTxInfo(types.TX_STATUS_PREPARE, connID, data.CrossChainTransaction.CallInfo)
 	k.SetTx(ctx, data.TxID, data.TxIndex, txinfo)
 	return nil
 }
@@ -138,9 +138,11 @@ func (k Keeper) prepareTransaction(
 	destinationChannel string,
 	data types.PacketDataPrepare,
 ) error {
+	cond := data.CrossChainTransaction.StateCondition
 	store, res, err := contractHandler.Handle(
-		types.WithSigners(ctx, data.ContractTransaction.Signers),
-		data.ContractTransaction.Contract,
+		types.WithSigners(ctx, data.CrossChainTransaction.Signers),
+		cond.Type,
+		data.CrossChainTransaction.CallInfo,
 	)
 	if err != nil {
 		return err
@@ -150,8 +152,8 @@ func (k Keeper) prepareTransaction(
 	if err := store.Precommit(id); err != nil {
 		return err
 	}
-	if ops := store.OPs(); !ops.Equal(data.ContractTransaction.OPs) {
-		return fmt.Errorf("unexpected ops: %v != %v", ops.String(), data.ContractTransaction.OPs.String())
+	if ops := store.OPs(); !ops.Equal(cond.OPs) {
+		return fmt.Errorf("unexpected ops: %v != %v", ops.String(), cond.OPs.String())
 	}
 	k.SetContractResult(ctx, data.TxID, data.TxIndex, res)
 	return nil
@@ -296,7 +298,7 @@ func (k Keeper) ReceiveCommitPacket(
 		return nil, fmt.Errorf("expected coordinatorConnectionID is %v, but got %v", tx.CoordinatorConnectionID, connID)
 	}
 
-	state, err := contractHandler.GetState(ctx, tx.Contract)
+	state, err := contractHandler.GetState(ctx, tx.ContractCallInfo)
 	if err != nil {
 		return nil, err
 	}

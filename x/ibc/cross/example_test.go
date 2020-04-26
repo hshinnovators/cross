@@ -148,18 +148,24 @@ func (suite *ExampleTestSuite) TestTrainAndHotelProblem() {
 	trainCall := contract.NewContractCallInfo(simappcontract.TrainContractID, simappcontract.ReserveFnName, [][]byte{contract.ToBytes(int32(1))})
 	hotelCall := contract.NewContractCallInfo(simappcontract.HotelContractID, simappcontract.ReserveFnName, [][]byte{contract.ToBytes(int32(8))})
 
-	var tss = []cross.ContractTransaction{
-		cross.NewContractTransaction(
+	var tss = []cross.CrossChainTransaction{
+		cross.NewCrossChainTransaction(
 			ch0to1,
 			[]sdk.AccAddress{signer1Info.GetAddress()},
 			trainCall.Bytes(),
-			[]cross.OP{lock.Write{K: simappcontract.MakeSeatKey(1), V: signer1Info.GetAddress()}},
+			cross.NewStateCondition(
+				cross.ExactStateCondition,
+				[]cross.OP{lock.Write{K: simappcontract.MakeSeatKey(1), V: signer1Info.GetAddress()}},
+			),
 		),
-		cross.NewContractTransaction(
+		cross.NewCrossChainTransaction(
 			ch0to2,
 			[]sdk.AccAddress{signer2Info.GetAddress()},
 			hotelCall.Bytes(),
-			[]cross.OP{lock.Write{K: simappcontract.MakeRoomKey(8), V: signer2Info.GetAddress()}},
+			cross.NewStateCondition(
+				cross.ExactStateCondition,
+				[]cross.OP{lock.Write{K: simappcontract.MakeRoomKey(8), V: signer2Info.GetAddress()}},
+			),
 		),
 	}
 	var txID cross.TxID

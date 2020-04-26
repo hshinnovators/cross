@@ -52,7 +52,7 @@ func TestContractHandler(t *testing.T) {
 			[]byte("100"),
 		})
 		bz, _ := types.EncodeContractSignature(contractInfo)
-		state, _, err := h.Handle(ctx, bz)
+		state, _, err := h.Handle(ctx, cross.NoStateCondition, bz)
 		if err != nil {
 			assert.FailNow(err.Error())
 		}
@@ -67,7 +67,7 @@ func TestContractHandler(t *testing.T) {
 				[]byte("100"),
 			})
 			bz, _ := types.EncodeContractSignature(contractInfo)
-			_, _, err := h.Handle(ctx, bz)
+			_, _, err := h.Handle(ctx, cross.NoStateCondition, bz)
 			if err == nil {
 				assert.FailNow("expected an error")
 			}
@@ -83,7 +83,7 @@ func TestContractHandler(t *testing.T) {
 				[]byte("100"),
 			})
 			bz, _ := types.EncodeContractSignature(contractInfo)
-			_, _, err := h.Handle(ctx, bz)
+			_, _, err := h.Handle(ctx, cross.NoStateCondition, bz)
 			if err != nil {
 				assert.FailNow(err.Error())
 			}
@@ -95,7 +95,7 @@ func TestContractHandler(t *testing.T) {
 				[]byte("50"),
 			})
 			bz, _ := types.EncodeContractSignature(contractInfo)
-			state, _, err := h.Handle(ctx, bz)
+			state, _, err := h.Handle(ctx, cross.NoStateCondition, bz)
 			if err != nil {
 				assert.FailNow(err.Error())
 			}
@@ -110,7 +110,7 @@ func TestContractHandler(t *testing.T) {
 				[]byte("50"),
 			})
 			bz, _ := types.EncodeContractSignature(contractInfo)
-			_, _, err := h.Handle(ctx, bz)
+			_, _, err := h.Handle(ctx, cross.NoStateCondition, bz)
 			if err != nil {
 				assert.FailNow(err.Error())
 			}
