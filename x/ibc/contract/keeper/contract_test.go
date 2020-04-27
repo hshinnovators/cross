@@ -34,7 +34,7 @@ func TestContractHandler(t *testing.T) {
 
 	stk := sdk.NewKVStoreKey("main")
 	k := NewKeeper(testcdc, stk)
-	h := NewContractHandler(k, func(kvs sdk.KVStore) cross.State {
+	h := NewContractHandler(k, func(kvs sdk.KVStore, tp cross.StateConditionType) cross.State {
 		return lock.NewStore(kvs)
 	})
 	c := makeContract()

@@ -28,7 +28,7 @@ type (
 )
 
 type ContractHandler interface {
-	GetState(ctx sdk.Context, callInfo ContractCallInfo) (State, error)
+	GetState(ctx sdk.Context, tp StateConditionType, callInfo ContractCallInfo) (State, error)
 	Handle(ctx sdk.Context, tp StateConditionType, callInfo ContractCallInfo) (State, ContractHandlerResult, error)
 	OnCommit(ctx sdk.Context, result ContractHandlerResult) ContractHandlerResult
 }

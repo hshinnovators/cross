@@ -49,7 +49,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 }
 
 func (suite *HandlerTestSuite) TestHandleContractCall() {
-	contractHandler := contract.NewContractHandler(suite.app.ContractKeeper, func(kvs sdk.KVStore) cross.State {
+	contractHandler := contract.NewContractHandler(suite.app.ContractKeeper, func(kvs sdk.KVStore, tp cross.StateConditionType) cross.State {
 		return lock.NewStore(kvs)
 	})
 	var methods []contract.Method

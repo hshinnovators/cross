@@ -298,7 +298,7 @@ func (k Keeper) ReceiveCommitPacket(
 		return nil, fmt.Errorf("expected coordinatorConnectionID is %v, but got %v", tx.CoordinatorConnectionID, connID)
 	}
 
-	state, err := contractHandler.GetState(ctx, tx.ContractCallInfo)
+	state, err := contractHandler.GetState(ctx, types.NoStateCondition, tx.ContractCallInfo)
 	if err != nil {
 		return nil, err
 	}

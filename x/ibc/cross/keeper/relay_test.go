@@ -131,7 +131,7 @@ func (suite *KeeperTestSuite) queryProof(actx *appContext, key []byte) (proof co
 }
 
 func (suite *KeeperTestSuite) createContractHandler(cdc *codec.Codec, stk sdk.StoreKey, cid string) cross.ContractHandler {
-	contractHandler := contract.NewContractHandler(contract.NewKeeper(cdc, stk), func(kvs sdk.KVStore) cross.State {
+	contractHandler := contract.NewContractHandler(contract.NewKeeper(cdc, stk), func(kvs sdk.KVStore, tp cross.StateConditionType) cross.State {
 		return lock.NewStore(kvs)
 	})
 	c := contract.NewContract([]contract.Method{
@@ -662,7 +662,7 @@ func (suite *KeeperTestSuite) testCommitPacket(actx *appContext, contractHandler
 	}
 	suite.Equal(cross.TX_STATUS_COMMIT, tx.Status)
 	// ensure that the state is expected
-	_, err = contractHandler.GetState(actx.ctx, tx.ContractCallInfo)
+	_, err = contractHandler.GetState(actx.ctx, cross.NoStateCondition, tx.ContractCallInfo)
 	if !suite.NoError(err) {
 		return
 	}
